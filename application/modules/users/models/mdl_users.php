@@ -57,7 +57,7 @@ class Mdl_Users extends Response_Model
             'user_email' => array(
                 'field' => 'user_email',
                 'label' => lang('email'),
-                'rules' => 'required|valid_email'
+                'rules' => 'required|valid_email|is_unique[ip_users.user_email]'
             ),
             'user_name' => array(
                 'field' => 'user_name',
@@ -67,7 +67,7 @@ class Mdl_Users extends Response_Model
             'user_password' => array(
                 'field' => 'user_password',
                 'label' => lang('password'),
-                'rules' => 'required'
+                'rules' => 'required|min_length[8]'
             ),
             'user_passwordv' => array(
                 'field' => 'user_passwordv',
@@ -94,8 +94,7 @@ class Mdl_Users extends Response_Model
             ),
             'user_country' => array(
                 'field' => 'user_country',
-                'label' => lang('user_country'),
-                'rules' => 'required'
+                'label' => lang('country'),
             ),
             'user_phone' => array(
                 'field' => 'user_phone'
@@ -156,7 +155,7 @@ class Mdl_Users extends Response_Model
             ),
             'user_country' => array(
                 'field' => 'user_country',
-                'label' => lang('user_country'),
+                'label' => lang('country'),
                 'rules' => 'required'
             ),
             'user_phone' => array(

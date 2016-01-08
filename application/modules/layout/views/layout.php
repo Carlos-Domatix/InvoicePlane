@@ -40,8 +40,10 @@
     <script src="<?php echo base_url(); ?>assets/default/js/libs/jquery-ui-1.11.2.custom.min.js"></script>
     <script src="<?php echo base_url(); ?>assets/default/js/libs/bootstrap-typeahead.js"></script>
     <script src="<?php echo base_url(); ?>assets/default/js/libs/select2.min.js"></script>
+    <script src="<?php echo base_url(); ?>assets/default/js/libs/dropzone.js"></script>
 
     <script type="text/javascript">
+        Dropzone.autoDiscover = false;
 
         $(function () {
             $('.nav-tabs').tab();
@@ -196,6 +198,19 @@
                     </ul>
                 </li>
 
+                <li class="dropdown hidden">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <i class="fa fa-caret-down"></i> &nbsp;<span
+                            class="hidden-sm"><?php echo lang('tasks'); ?></span><i
+                            class="visible-sm-inline fa fa-check-square-o"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><?php echo anchor('tasks/form', lang('create_task')); ?></li>
+                        <li><?php echo anchor('tasks/index', lang('show_tasks')); ?></li>
+                        <li><?php echo anchor('projects/index', lang('projects')); ?></li>
+                    </ul>
+                </li>
+
                 <li class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">
                         <i class="fa fa-caret-down"></i> &nbsp;<span
@@ -214,7 +229,7 @@
 
             <?php if (isset($filter_display) and $filter_display == TRUE) { ?>
                 <?php $this->layout->load_view('filter/jquery_filter'); ?>
-                <form class="navbar-form navbar-left" role="search">
+                <form class="navbar-form navbar-left" role="search" onsubmit="return false;">
                     <div class="form-group">
                         <input id="filter" type="text" class="search-query form-control input-sm"
                                placeholder="<?php echo $filter_placeholder; ?>">
@@ -243,6 +258,7 @@
                         <li><?php echo anchor('custom_fields/index', lang('custom_fields')); ?></li>
                         <li><?php echo anchor('email_templates/index', lang('email_templates')); ?></li>
                         <li><?php echo anchor('invoice_groups/index', lang('invoice_groups')); ?></li>
+                        <li><?php echo anchor('invoices/archive', lang('invoice_archive')); ?></li>
                         <!-- // temporarily disabled
                         <li><?php echo anchor('item_lookups/index', lang('item_lookups')); ?></li>
                         -->
@@ -254,7 +270,17 @@
                         <li><?php echo anchor('import', lang('import_data')); ?></li>
                     </ul>
                 </li>
-
+                <li>
+                    <a href="<?php echo site_url('users/form/' .
+                        $this->session->userdata('user_id')); ?>">
+                        <?php
+                        print($this->session->userdata('user_name'));
+                        if ($this->session->userdata('user_company')) {
+                            print(" (" . $this->session->userdata('user_company') . ")");
+                        }
+                        ?>
+                    </a>
+                </li>
                 <li>
                     <a href="<?php echo site_url('sessions/logout'); ?>"
                        class="tip icon logout" data-placement="bottom"
@@ -273,27 +299,27 @@
 } ?>">
     <ul>
         <li>
-            <a href="<?php echo site_url('dashboard'); ?>">
+            <a href="<?php echo site_url('dashboard'); ?>" title="<?php echo lang('dashboard'); ?>" class="tip" data-placement="right">
                 <i class="fa fa-dashboard"></i>
             </a>
         </li>
         <li>
-            <a href="<?php echo site_url('clients/index'); ?>">
+            <a href="<?php echo site_url('clients/index'); ?>" title="<?php echo lang('clients'); ?>" class="tip" data-placement="right">
                 <i class="fa fa-users"></i>
             </a>
         </li>
         <li>
-            <a href="<?php echo site_url('quotes/index'); ?>">
+            <a href="<?php echo site_url('quotes/index'); ?>" title="<?php echo lang('quotes'); ?>" class="tip" data-placement="right">
                 <i class="fa fa-file"></i>
             </a>
         </li>
         <li>
-            <a href="<?php echo site_url('invoices/index'); ?>">
+            <a href="<?php echo site_url('invoices/index'); ?>" title="<?php echo lang('invoices'); ?>" class="tip" data-placement="right">
                 <i class="fa fa-file-text"></i>
             </a>
         </li>
         <li>
-            <a href="<?php echo site_url('payments/index'); ?>">
+            <a href="<?php echo site_url('payments/index'); ?>" title="<?php echo lang('payments'); ?>" class="tip" data-placement="right">
                 <i class="fa fa-money"></i>
             </a>
         </li>
@@ -306,6 +332,19 @@
 
     <?php echo $content; ?>
 
+</div>
+
+<div id="fullpage-loader" style="display: none">
+    <div class="loader-content">
+        <i class="fa fa-cog fa-spin"></i>
+        <div id="loader-error" style="display: none">
+            <?php echo lang('loading_error'); ?><br/>
+            <a href="https://wiki.invoiceplane.com/<?php echo lang('cldr'); ?>/1.0/general/faq"
+               class="btn btn-primary btn-sm" target="_blank">
+                <i class="fa fa-support"></i> <?php echo lang('loading_error_help'); ?>
+            </a>
+        </div>
+    </div>
 </div>
 
 <script defer src="<?php echo base_url(); ?>assets/default/js/plugins.js"></script>

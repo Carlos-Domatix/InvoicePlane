@@ -26,6 +26,8 @@ function format_currency($amount)
 
     if ($currency_symbol_placement == 'before') {
         return $currency_symbol . number_format($amount, ($decimal_point) ? 2 : 0, $decimal_point, $thousands_separator);
+    } elseif ($currency_symbol_placement == 'afterspace') {
+        return number_format($amount, ($decimal_point) ? 2 : 0, $decimal_point, $thousands_separator) . '&nbsp;' . $currency_symbol;
     } else {
         return number_format($amount, ($decimal_point) ? 2 : 0, $decimal_point, $thousands_separator) . $currency_symbol;
     }
@@ -34,7 +36,7 @@ function format_currency($amount)
 function format_amount($amount = NULL)
 {
     if ($amount) {
-        global $CI;
+        $CI =& get_instance();
         $thousands_separator = $CI->mdl_settings->setting('thousands_separator');
         $decimal_point = $CI->mdl_settings->setting('decimal_point');
 
@@ -45,7 +47,7 @@ function format_amount($amount = NULL)
 
 function standardize_amount($amount)
 {
-    global $CI;
+    $CI =& get_instance();
     $thousands_separator = $CI->mdl_settings->setting('thousands_separator');
     $decimal_point = $CI->mdl_settings->setting('decimal_point');
 

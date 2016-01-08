@@ -20,7 +20,11 @@
 @import "fonts/font-awesome/font-awesome";
 
 // Import Noto Font
-@import "fonts/noto/noto";
+@import "fonts/source-sans-pro";
+
+// Import Select2
+@import "select2/select2";
+@import "select2/select2-bootstrap";
 
 
 /*
@@ -33,7 +37,7 @@
 
 body {
     background-color: #fff;
-    font-family: 'Noto Sans', Helvetica, Arial, sans-serif;
+    font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif;
 }
 
 img {
@@ -115,4 +119,10 @@ only screen and (min-device-pixel-ratio: 2) {
 .btn {
     padding-left: 20px;
     padding-right: 20px;
+}
+
+.optional {
+    float: right;
+    font-size: small;
+    color: #888;
 }

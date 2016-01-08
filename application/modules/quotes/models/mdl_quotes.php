@@ -140,7 +140,7 @@ class Mdl_Quotes extends Response_Model
         return array(
             'quote_number' => array(
                 'field' => 'quote_number',
-                'label' => lang('quote_number'),
+                'label' => lang('quote').' #',
                 'rules' => 'required|is_unique[ip_quotes.quote_number' . (($this->id) ? '.quote_id.' . $this->id : '') . ']'
             ),
             'quote_date_created' => array(
@@ -243,6 +243,7 @@ class Mdl_Quotes extends Response_Model
         $db_array['quote_date_created'] = date_to_mysql($db_array['quote_date_created']);
         $db_array['quote_date_expires'] = $this->get_date_due($db_array['quote_date_created']);
         $db_array['quote_number'] = $this->get_quote_number($db_array['invoice_group_id']);
+        $db_array['notes'] = $this->mdl_settings->setting('default_quote_notes');
 
         if (!isset($db_array['quote_status_id'])) {
             $db_array['quote_status_id'] = 1;

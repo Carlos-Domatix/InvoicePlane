@@ -188,6 +188,8 @@ class Setup extends MX_Controller
 
         $this->load->model('users/mdl_users');
 
+        $this->load->helper('country');
+
         if ($this->mdl_users->run_validation()) {
             $db_array = $this->mdl_users->db_array();
             $db_array['user_type'] = 1;
@@ -198,6 +200,11 @@ class Setup extends MX_Controller
             redirect('setup/complete');
         }
 
+        $this->layout->set(
+            array(
+                'countries' => get_country_list(lang('cldr')),
+            )
+        );
         $this->layout->buffer('content', 'setup/create_user');
         $this->layout->render('setup');
     }
@@ -238,8 +245,12 @@ class Setup extends MX_Controller
         $writables = array(
             './uploads',
             './uploads/temp',
-            './' . APPPATH . 'config/database.php',
+            './uploads/archive',
+            './uploads/customer_files',
+            './' . APPPATH . 'config/', // for database.php
             './' . APPPATH . 'helpers/mpdf/tmp',
+            './' . APPPATH . 'helpers/mpdf/ttfontdata',
+            './' . APPPATH . 'helpers/mpdf/graph_cache',
             './' . APPPATH . 'logs'
         );
 
@@ -266,7 +277,13 @@ class Setup extends MX_Controller
     {
         $this->load->library('lib_mysql');
 
-        require(APPPATH . '/config/database.php');
+        if (is_file(APPPATH . '/config/database.php')) {
+            // There is alread a (hopefully working?) database.php file.
+            require(APPPATH . '/config/database.php');
+        } else {
+            // No database.php file existent. Use the _empty template.
+            require(APPPATH . '/config/database_empty.php');
+        }
 
         $db = $db['default'];
 

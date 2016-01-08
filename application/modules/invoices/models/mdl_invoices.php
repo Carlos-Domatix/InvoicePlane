@@ -5,7 +5,7 @@ if (!defined('BASEPATH'))
 
 /*
  * InvoicePlane
- * 
+ *
  * A free and open source web based invoicing system
  *
  * @package		InvoicePlane
@@ -13,7 +13,7 @@ if (!defined('BASEPATH'))
  * @copyright	Copyright (c) 2012 - 2015 InvoicePlane.com
  * @license		https://invoiceplane.com/license.txt
  * @link		https://invoiceplane.com
- * 
+ *
  */
 
 class Mdl_Invoices extends Response_Model
@@ -128,7 +128,11 @@ class Mdl_Invoices extends Response_Model
                 'field' => 'user_id',
                 'label' => lang('user'),
                 'rule' => 'required'
-            )
+            ),
+            'payment_method' => array(
+                'field' => 'payment_method',
+                'label' => lang('payment_method')
+            ),
         );
     }
 
@@ -137,7 +141,7 @@ class Mdl_Invoices extends Response_Model
         return array(
             'invoice_number' => array(
                 'field' => 'invoice_number',
-                'label' => lang('invoice_number'),
+                'label' => lang('invoice') . ' #',
                 'rules' => 'required|is_unique[ip_invoices.invoice_number' . (($this->id) ? '.invoice_id.' . $this->id : '') . ']'
             ),
             'invoice_date_created' => array(

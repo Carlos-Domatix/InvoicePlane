@@ -26,7 +26,7 @@
         <h1><?php echo lang('email_invoice'); ?></h1>
 
         <div class="pull-right btn-group">
-            <button class="btn btn-sm btn-primary" name="btn_send" value="1">
+            <button class="btn btn-sm btn-primary ajax-loader" name="btn_send" value="1">
                 <i class="fa fa-send"></i>
                 <?php echo lang('send'); ?>
             </button>
@@ -138,25 +138,174 @@
 
         <div class="form-group">
             <div class="col-xs-12 col-sm-2 text-right text-left-xs">
-                <label for="body" class="control-label"><?php echo lang('body'); ?>: </label>
-            </div>
-            <div class="col-xs-12 col-sm-6">
-                <textarea name="body" id="body" class="form-control" rows="8"></textarea>
+                <label for="email_template_body">
+                    <?php echo lang('body'); ?>:
+                </label>
             </div>
 
-            <script src="<?php echo base_url(); ?>assets/default/js/libs/sceditor.min.js"></script>
-            <script>
-                $(document).ready(function(){
-                    $("#body").sceditor({
-                        toolbar: "bold,italic,underline|left,center,right|font|size,color,code|image,email,link|source",
-                        fonts: "Sans-serif,Serif",
-                        width: "auto",
-                        emoticonsEnabled: false
-                    });
-                });
-            </script>
+            <div class="col-xs-12 col-sm-6">
+                <div class="html-tags btn-group btn-group-sm">
+                    <span class="html-tag btn btn-default" data-tag-type="text-paragraph">
+                        <i class="fa fa-paragraph"></i>
+                    </span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-bold">
+                        <i class="fa fa-bold"></i>
+                    </span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-italic">
+                        <i class="fa fa-italic"></i>
+                    </span>
+                </div>
+                <div class="html-tags btn-group btn-group-sm">
+                    <span class="html-tag btn btn-default" data-tag-type="text-h1">H1</span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-h2">H2</span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-h3">H3</span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-h4">H4</span>
+                </div>
+                <div class="html-tags btn-group btn-group-sm">
+                    <span class="html-tag btn btn-default" data-tag-type="text-code">
+                        <i class="fa fa-code"></i>
+                    </span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-hr">
+                        &lt;hr/&gt;
+                    </span>
+                    <span class="html-tag btn btn-default" data-tag-type="text-css">
+                        CSS
+                    </span>
+                </div>
+
+                <textarea name="body" id="body" style="height: 200px;"
+                          class="email-template-body form-control taggable"></textarea>
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <?php echo lang('preview'); ?>
+                        <span id="email-template-preview-reload" class="pull-right cursor-pointer">
+                            <i class="fa fa-refresh"></i>
+                        </span>
+                    </div>
+                    <div class="panel-body">
+                        <iframe id="email-template-preview"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-xs-12 col-sm-2 text-right text-left-xs">
+                <label class="control-label"><?php echo lang('attachments'); ?>: </label>
+                <!-- The fileinput-button span is used to style the file input field as button -->
+                    <span class="btn btn-success fileinput-button">
+                        <i class="glyphicon glyphicon-plus"></i>
+                         <span><?php echo lang('add_files'); ?></span>
+                    </span>
+            </div>
+            <!-- dropzone -->
+            <div id="actions" class="col-xs-12 col-sm-6 row">
+                <div class="col-lg-7"></div>
+                <div class="col-lg-5">
+                    <!-- The global file processing state -->
+                    <span class="fileupload-process">
+                      <div id="total-progress" class="progress progress-striped active" role="progressbar"
+                           aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                          <div class="progress-bar progress-bar-success" style="width:0%;" data-dz-uploadprogress></div>
+                      </div>
+                    </span>
+                </div>
+
+                <div class="table table-striped" class="files" id="previews">
+
+                    <div id="template" class="file-row">
+                        <!-- This is used as the file preview template -->
+                        <div>
+                            <span class="preview"><img data-dz-thumbnail/></span>
+                        </div>
+                        <div>
+                            <p class="name" data-dz-name></p>
+                            <strong class="error text-danger" data-dz-errormessage></strong>
+                        </div>
+                        <div>
+                            <p class="size" data-dz-size></p>
+
+                            <div class="progress progress-striped active" role="progressbar" aria-valuemin="0"
+                                 aria-valuemax="100" aria-valuenow="0">
+                                <div class="progress-bar progress-bar-success" style="width:0%;"
+                                     data-dz-uploadprogress></div>
+                            </div>
+                        </div>
+                        <div>
+                            <button data-dz-remove class="btn btn-danger delete">
+                                <i class="glyphicon glyphicon-trash"></i>
+                                <span><?php echo lang('delete'); ?></span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <!-- stop dropzone -->
         </div>
 
-    </div>
-
 </form>
+<script>
+    // Get the template HTML and remove it from the document
+    var previewNode = document.querySelector("#template");
+    previewNode.id = "";
+    var previewTemplate = previewNode.parentNode.innerHTML;
+    previewNode.parentNode.removeChild(previewNode);
+    var myDropzone = new Dropzone(document.body, { // Make the whole body a dropzone
+        url: "<?php echo site_url('upload/upload_file/' . $invoice->client_id. '/'.$invoice->invoice_url_key) ?>", // Set the url
+        thumbnailWidth: 80,
+        thumbnailHeight: 80,
+        parallelUploads: 20,
+        uploadMultiple: false,
+        previewTemplate: previewTemplate,
+        autoQueue: true, // Make sure the files aren't queued until manually added
+        previewsContainer: "#previews", // Define the container to display the previews
+        clickable: ".fileinput-button", // Define the element that should be used as click trigger to select files.
+        init: function () {
+            thisDropzone = this;
+            $.getJSON("<?php echo site_url('upload/upload_file/' . $invoice->client_id. '/'. $invoice->invoice_url_key) ?>", function (data) {
+                $.each(data, function (index, val) {
+                    var mockFile = {fullname: val.fullname, size: val.size, name: val.name};
+                    thisDropzone.options.addedfile.call(thisDropzone, mockFile);
+                    if (val.fullname.match(/\.(jpg|jpeg|png|gif)$/)) {
+                        thisDropzone.options.thumbnail.call(thisDropzone, mockFile,
+                            '<?php echo base_url(); ?>uploads/customer_files/' + val.fullname);
+                    } else {
+                        thisDropzone.options.thumbnail.call(thisDropzone, mockFile,
+                            '<?php echo base_url(); ?>assets/default/img/favicon.png');
+                    }
+                    thisDropzone.emit("complete", mockFile);
+                    thisDropzone.emit("success", mockFile);
+                });
+            });
+        }
+    });
+
+    myDropzone.on("addedfile", function (file) {
+        myDropzone.emit("thumbnail", file, '<?php echo base_url(); ?>assets/default/img/favicon.png');
+    });
+
+    // Update the total progress bar
+    myDropzone.on("totaluploadprogress", function (progress) {
+        document.querySelector("#total-progress .progress-bar").style.width = progress + "%";
+    });
+
+    myDropzone.on("sending", function (file) {
+        // Show the total progress bar when upload starts
+        document.querySelector("#total-progress").style.opacity = "1";
+    });
+
+    // Hide the total progress bar when nothing's uploading anymore
+    myDropzone.on("queuecomplete", function (progress) {
+        document.querySelector("#total-progress").style.opacity = "0";
+
+    });
+
+    myDropzone.on("removedfile", function (file) {
+        $.ajax({
+            url: "<?php echo site_url('upload/delete_file/'.$invoice->invoice_url_key) ?>",
+            type: "POST",
+            data: {'name': file.name}
+        });
+    });
+</script>

@@ -41,12 +41,22 @@ class Mdl_Invoice_Amounts extends CI_Model
     public function calculate($invoice_id)
     {
         // Get the basic totals
-        $query = $this->db->query("SELECT SUM(item_subtotal) AS invoice_item_subtotal,	
-		SUM(item_tax_total) AS invoice_item_tax_total,
-		SUM(item_subtotal) + SUM(item_tax_total) AS invoice_total
-		FROM ip_invoice_item_amounts WHERE item_id IN (SELECT item_id FROM ip_invoice_items WHERE invoice_id = " . $this->db->escape($invoice_id) . ")");
+        $query = $this->db->query("
+        SELECT  SUM(item_subtotal) AS invoice_item_subtotal,
+		        SUM(item_tax_total) AS invoice_item_tax_total,
+		        SUM(item_subtotal) + SUM(item_tax_total) AS invoice_total,
+		        SUM(item_discount) AS invoice_item_discount
+		FROM ip_invoice_item_amounts
+		WHERE item_id IN (
+		    SELECT item_id FROM ip_invoice_items WHERE invoice_id = " . $this->db->escape($invoice_id) . "
+		    )
+        ");
 
         $invoice_amounts = $query->row();
+
+        $invoice_item_subtotal = $invoice_amounts->invoice_item_subtotal - $invoice_amounts->invoice_item_discount;
+        $invoice_subtotal = $invoice_item_subtotal + $invoice_amounts->invoice_item_tax_total;
+        $invoice_total = $this->calculate_discount($invoice_id, $invoice_subtotal);
 
         // Get the amount already paid
         $query = $this->db->query("SELECT SUM(payment_amount) AS invoice_paid FROM ip_payments WHERE invoice_id = " . $this->db->escape($invoice_id));
@@ -56,11 +66,11 @@ class Mdl_Invoice_Amounts extends CI_Model
         // Create the database array and insert or update
         $db_array = array(
             'invoice_id' => $invoice_id,
-            'invoice_item_subtotal' => $invoice_amounts->invoice_item_subtotal,
+            'invoice_item_subtotal' => $invoice_item_subtotal,
             'invoice_item_tax_total' => $invoice_amounts->invoice_item_tax_total,
-            'invoice_total' => $invoice_amounts->invoice_total,
+            'invoice_total' => $invoice_total,
             'invoice_paid' => ($invoice_paid) ? $invoice_paid : 0,
-            'invoice_balance' => $invoice_amounts->invoice_total - $invoice_paid
+            'invoice_balance' => $invoice_total - $invoice_paid
         );
 
         $this->db->where('invoice_id', $invoice_id);
@@ -81,7 +91,7 @@ class Mdl_Invoice_Amounts extends CI_Model
 
             // Get the payment method id first
             $this->db->where('invoice_id', $invoice_id);
-            $payment = $this->db->get('invoice_id');
+            $payment = $this->db->get('ip_payments')->row();
             $payment_method_id = (isset($payment->payment_method_id) ? $payment->payment_method_id : 0);
 
             $this->db->where('invoice_id', $invoice_id);
@@ -133,6 +143,7 @@ class Mdl_Invoice_Amounts extends CI_Model
 
             // Recalculate the invoice total and balance
             $invoice_total = $invoice_amount->invoice_item_subtotal + $invoice_amount->invoice_item_tax_total + $invoice_amount->invoice_tax_total;
+            $invoice_total = $this->calculate_discount($invoice_id, $invoice_total);
             $invoice_balance = $invoice_total - $invoice_amount->invoice_paid;
 
             // Update the invoice amount record
@@ -145,7 +156,7 @@ class Mdl_Invoice_Amounts extends CI_Model
             $this->db->update('ip_invoice_amounts', $db_array);
 
             // Set to paid if applicable
-            if ($invoice_balance == 0) {
+            if ($invoice_balance <= 0) {
                 $this->db->where('invoice_id', $invoice_id);
                 $this->db->set('invoice_status_id', 4);
                 $this->db->update('ip_invoices');
@@ -165,6 +176,21 @@ class Mdl_Invoice_Amounts extends CI_Model
             $this->db->where('invoice_id', $invoice_id);
             $this->db->update('ip_invoice_amounts', $db_array);
         }
+    }
+
+    public function calculate_discount($invoice_id, $invoice_total)
+    {
+        $this->db->where('invoice_id', $invoice_id);
+        $invoice_data = $this->db->get('ip_invoices')->row();
+
+        $total = (float)number_format($invoice_total, 2, '.', '');
+        $discount_amount = (float)number_format($invoice_data->invoice_discount_amount, 2, '.', '');
+        $discount_percent = (float)number_format($invoice_data->invoice_discount_percent, 2, '.', '');
+
+        $total = $total - $discount_amount;
+        $total = $total - round(($total / 100 * $discount_percent), 2);
+
+        return $total;
     }
 
     public function get_total_invoiced($period = NULL)
@@ -296,6 +322,7 @@ class Mdl_Invoice_Amounts extends CI_Model
 					FROM ip_invoice_amounts
 					JOIN ip_invoices ON ip_invoices.invoice_id = ip_invoice_amounts.invoice_id
                         AND QUARTER(ip_invoices.invoice_date_created) = QUARTER(NOW())
+                        AND YEAR(ip_invoices.invoice_date_created) = YEAR(NOW())
 					GROUP BY ip_invoices.invoice_status_id")->result_array();
                 break;
             case 'last-quarter':
@@ -304,6 +331,7 @@ class Mdl_Invoice_Amounts extends CI_Model
 					FROM ip_invoice_amounts
 					JOIN ip_invoices ON ip_invoices.invoice_id = ip_invoice_amounts.invoice_id
                         AND QUARTER(ip_invoices.invoice_date_created) = QUARTER(NOW() - INTERVAL 1 QUARTER)
+                        AND YEAR(ip_invoices.invoice_date_created) = YEAR(NOW())
 					GROUP BY ip_invoices.invoice_status_id")->result_array();
                 break;
             case 'this-year':
