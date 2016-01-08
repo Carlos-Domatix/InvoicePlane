@@ -217,7 +217,6 @@ $lang = array(
     'invoiced'                                     => 'Invoiced',
     'invoiceplane_news'                            => 'InvoicePlane News',
     'invoices'                                     => 'Invoices',
-    'invoices_by_date'				   => 'Invoices By Date',
     'invoices_due_after'                           => 'Invoices Due After (Days)',
     'is_not_writable'                              => 'is not writable',
     'is_writable'                                  => 'is writable',

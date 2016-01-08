@@ -95,22 +95,4 @@ class Reports extends Admin_Controller
         $this->layout->buffer('content', 'reports/sales_by_year_index')->render();
     }
 
-   public function invoices_by_date()
-    {
-    
-    	if ($this->input->post('btn_submit')) {
-    		$data = array(
-    				'results' => $this->mdl_reports->invoices_by_date($this->input->post('from_date'), $this->input->post('to_date'))
-    		);
-    
-    		$html = $this->load->view('reports/invoices_by_date', $data, TRUE);
-    
-    		$this->load->helper('mpdf');
-    
-    		pdf_create($html, lang('invoices_by_date'), TRUE);
-    	}
-    
-    	$this->layout->buffer('content', 'reports/invoices_by_date_index')->render();
-    }
-
 }
